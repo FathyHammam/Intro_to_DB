@@ -1,32 +1,35 @@
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import errorcode
 
 def create_database():
     try:
-        # Connect to MySQL Server (update user and password as needed)
-        connection = mysql.connector.connect(
-            host="localhost",
-            user="root",  # Change to your MySQL username
-            password="yourpassword"  # Change to your MySQL password
+        # Establishing the connection to MySQL server
+        db_connection = mysql.connector.connect(
+            host="localhost",        # You can change this if your MySQL server is hosted elsewhere
+            user="root",             # Your MySQL username
+            password="your_password" # Your MySQL password
         )
 
-        if connection.is_connected():
-            cursor = connection.cursor()
-            
-            # Create the database if it does not exist
-            cursor.execute("CREATE DATABASE IF NOT EXISTS alx_book_store")
+        cursor = db_connection.cursor()
 
-            print("Database 'alx_book_store' created successfully!")
-            
-    except Error as e:
-        print(f"Error: {e}")
+        # Check if database already exists before creating it
+        cursor.execute("CREATE DATABASE IF NOT EXISTS alx_book_store")
 
+        print("Database 'alx_book_store' created successfully!")
+
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Access denied. Check your username or password.")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist.")
+        else:
+            print(f"Error: {err}")
     finally:
-        # Close the connection
-        if 'cursor' in locals():
+        # Ensure the database connection is closed properly
+        if db_connection.is_connected():
             cursor.close()
-        if 'connection' in locals() and connection.is_connected():
-            connection.close()
+            db_connection.close()
+            print("Database connection closed.")
 
 if __name__ == "__main__":
     create_database()
